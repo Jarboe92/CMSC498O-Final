@@ -1,0 +1,43 @@
+.grid-container {
+  display: grid;
+  grid-gap: 10px;
+  background-color: #2196F3;
+  padding: 10px;
+}
+
+.grid-item {
+  background-color: rgba(255, 255, 255, 0.8);
+  text-align: left;
+  padding: 20px;
+  font-size: 15px;
+}
+
+.item1 {
+  grid-column: 1 / span 15;
+  grid-row: 1 / span 75;
+}
+
+.item2 {
+  grid-column: 16;
+  grid-row: 1 / span 5;
+}
+
+.item3 {
+  grid-column: 16;
+  grid-row: 6 / span 70;
+}
+
+.checkboxes label {
+  display: block;
+  padding-right: 10px;
+  padding-left: 22px;
+  text-indent: -22px;
+}
+.checkboxes input {
+  vertical-align: middle;
+}
+.checkboxes label span {
+  vertical-align: middle;
+}
+
+.container { border:2px solid #ccc; width:300px; height: 100px; overflow-y: scroll; }
