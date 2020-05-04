@@ -12,7 +12,7 @@ renderVisualization();
 
 function renderVisualization() {
 
-    d3.csv("http://localhost:8080/temp.csv", function(d) {
+    d3.csv("http://localhost:8080/dataset.csv", function(d) {
     	//two values, url source and url target
     	return {
     		source : d.source,
@@ -27,17 +27,36 @@ function renderVisualization() {
 
 function generateCheckboxes(data) {
 	//Here we want to iterate through the source URLs and generate checkboxes for visualization
-	var dataset = fixData(data);
-	for (var i = 0; i < dataset.nodes.length; i++) {
+	var dataset = [];
+
+	for (var i = 0; i < data.length; i++) {
+		if (!dataset.includes(data[i].source)) {
+			dataset.push(data[i].source);
+		}
+	}
+	// have a randomly determined source node be defaulted checked, so the visualization loads with something
+	// afterwards the visualization will update when the user selects different websites
+
+	//var randomChecked1 = Math.floor(Math.random() * (dataset.length));
+	//var randomChecked2 = Math.floor(Math.random() * (dataset.length));
+
+	var randomChecked1 = 0;
+	var randomChecked2 = 3;
+
+	for (var i = 0; i < dataset.length; i++) {
 		var checkbox = document.createElement('input');
 		checkbox.type = 'checkbox';
 		checkbox.id = 'sourceURL';
-		checkbox.name = dataset.nodes[i].id;
-		checkbox.value = dataset.nodes[i].id;
+		checkbox.name = dataset[i];
+		checkbox.value = dataset[i];
+
+		if (i == randomChecked1 || i == randomChecked2) {
+			checkbox.checked = true;
+		}
 
 		var label = document.createElement('label');
-		label.htmlFor = dataset.nodes[i];
-		label.appendChild(document.createTextNode(dataset.nodes[i].id));
+		label.htmlFor = dataset[i];
+		label.appendChild(document.createTextNode(dataset[i]));
 
 		var br = document.createElement('br');
 
@@ -51,7 +70,8 @@ function generateCheckboxes(data) {
 function generateVisualization(data) {
 	// first we have to "fix" our dataset. Currently we have it as a source and target, but
 	// in order to do the force-directed layout, we need to seperate our dataset into nodes and edges.
-	var dataset = fixData(data);
+	var dataset = checkedOnly(fixData(data));
+	//var dataset = fixData(data);
 
 	var force = d3.forceSimulation(dataset.nodes)
 				.force("charge", d3.forceManyBody())
@@ -119,6 +139,7 @@ function generateVisualization(data) {
 function fixData(data) {
 	// passing in our dataset extracted from the CSV, it is in the form of sources and targets.
 	// from that we have to set up the dataset so that it is nodes and edges.
+	// this is necessary for the force directed graph in D3 (it wants specific formating for the dataset)
 	var nodes = [];
 	var temp = [];
 	var edges = [];
@@ -161,6 +182,69 @@ function fixData(data) {
 	var obj = {};
 	obj["nodes"] = nodes;
 	obj["edges"] = temp2;
+	return obj;
+}
+
+function checkedOnly(fixedData) {
+	// we're assuming the dataset passed in is the formatted dataset, and here we want to just have the
+	// data for the checked websites.
+
+	var checkedNodes = [];
+	var checkedEdges = [];
+	var matches = document.querySelectorAll('input:checked');
+
+	// first get all the nodes for the visualization from the selected source URLs and their targets
+	for (var i = 0; i < matches.length; i++) {
+		// iterate through the checked URLs, and add their nodes and edges to the curated dataset we're
+		// returning
+		var curURL = matches[i].value;
+
+		// first we add the checked websites to the checkedNodes array.
+		for (var k = 0; k < fixedData.nodes.length; k++) {
+			if (fixedData.nodes[k].id == curURL) {
+				checkedNodes.push(fixedData.nodes[k]);
+			}
+		}
+		// here we add the target nodes to the checkedNode array
+		for (var k = 0; k < fixedData.edges.length; k++) {
+			if (checkedNodes.includes(fixedData.nodes[fixedData.edges[k].source])) {
+				var destCheck = fixedData.nodes[fixedData.edges[k].target];
+				if (!checkedNodes.includes(destCheck))
+					checkedNodes.push(destCheck);
+			}
+		}
+
+		// for the current checked website, after adding the source and destination nodes, we can add the edges based
+		// on the checkedNodes indices
+		for (var k = 0; k < fixedData.edges.length; k++) {
+			console.log("current k is: " + k);
+			var source = fixedData.nodes[fixedData.edges[k].source];
+			var target = fixedData.nodes[fixedData.edges[k].target];
+
+			var sourceVal = -1
+
+			var destVal = -1;
+
+			for (var j = 0; j < checkedNodes.length; j++) {
+				if (checkedNodes[j].id == source.id)
+					sourceVal = j;
+				if (checkedNodes[j].id == target.id)
+					destVal = j;
+			}
+			if (sourceVal >= 0 && destVal >= 0) {
+				console.log("source val is: " + sourceVal);
+				console.log("dest val is: " + destVal);
+				var obj = {};
+				obj["source"] = sourceVal;
+				obj["target"] = destVal;
+				checkedEdges.push(obj);
+			}
+		}
+	}
+
+	var obj = {};
+	obj["nodes"] = checkedNodes;
+	obj["edges"] = checkedEdges;
 	return obj;
 }
 
