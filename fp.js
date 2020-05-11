@@ -105,16 +105,23 @@ function generateVisualization(data) {
 
 	var svg = d3.select("#dataviz");
 
+	var g = svg.append("g")
+		.attr("class", "everything");
+
 	// TODO maybe: add a function to .style("stroke") so that the color of the edge
 	// varies depending on the source node?
-	var edges = svg.selectAll("line")
+		var edges = g.append("g")
+				.attr("class", "links")
+				.selectAll("line")
 				.data(dataset.edges)
 				.enter()
 				.append("line")
 				.style("stroke", "#999")
 				.style("stroke-width", 2);
 
-	var nodes = svg.selectAll("circle")
+	var nodes = g.append("g")
+				.attr("class", "nodes")
+				.selectAll("circle")
 				.data(dataset.nodes)
 				.enter()
 				.append("circle")
@@ -130,6 +137,12 @@ function generateVisualization(data) {
 					.on("start", dragStarted)
 					.on("drag", dragging)
 					.on("end", dragEnded));
+
+
+	var zoom_handler = d3.zoom()
+    	.on("zoom", zoom_actions);
+
+	zoom_handler(svg);   
 
 	nodes.append("title")
 		.text(function(d) {
@@ -161,6 +174,10 @@ function generateVisualization(data) {
 		if (!d3.event.active) force.alphaTarget(0);
 		d.fx = null;
 		d.fy = null;
+	}
+
+	function zoom_actions(){
+    	g.attr("transform", d3.event.transform)
 	}
 
 }
@@ -286,8 +303,6 @@ function generateListeners(data, fixedData) {
 	// match.addEventListener("search", e => {
 	// 	searchCheckboxes(data);
 	// });
-
-	
 	//checkbox functionality
 	var matches = document.querySelectorAll('input#sourceURL');
 	for (var i = 0; i < matches.length; i++) {
