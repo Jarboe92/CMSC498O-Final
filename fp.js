@@ -22,11 +22,11 @@ function renderVisualization() {
     	var fixedData = fixData(data);
     	generateCheckboxes(data, null);
     	generateVisualization(fixedData);
-    	generateListeners(data, fixedData);
+    	generateListeners(fixedData);
     });
 }
 
-function generateCheckboxes(data, searchVal) {
+function generateCheckboxes(data) {
 	//Here we want to iterate through the source URLs and generate checkboxes for visualization
 	var container = document.getElementById('urlSources');
 	var dataset = [];
@@ -38,53 +38,29 @@ function generateCheckboxes(data, searchVal) {
 
 	var checked1 = 199;
 	var checked2 = 2317;
-	if (searchVal == null) {
-		for (var i = 0; i < dataset.length; i++) {
-			var checkbox = document.createElement('input');
-			checkbox.type = 'checkbox';
-			checkbox.id = 'sourceURL';
-			checkbox.name = dataset[i];
-			checkbox.value = dataset[i];
-			if (i == checked1 || i == checked2) {
-				checkbox.checked = true;
-			}
-
-			var label = document.createElement('label');
-			label.htmlFor = dataset[i];
-			label.appendChild(document.createTextNode(dataset[i]));
-
-			var br = document.createElement('br');
-
-			var container = document.getElementById('urlSources');
-			container.appendChild(checkbox);
-			container.appendChild(label);
-			container.appendChild(br);
+	for (var i = 0; i < dataset.length; i++) {
+		var div = document.createElement('div');
+		div.id = "sourceURLdiv";
+		var checkbox = document.createElement('input');
+		checkbox.type = 'checkbox';
+		checkbox.id = 'sourceURL';
+		checkbox.name = dataset[i];
+		checkbox.value = dataset[i];
+		if (i == checked1 || i == checked2) {
+			checkbox.checked = true;
 		}
-	} else {
-		var sv = searchVal.toUpperCase();
-		for (var i = 0; i < dataset.length; i++) {
-			if (dataset[i].toUpperCase().includes(sv)) {
-				var checkbox = document.createElement('input');
-				checkbox.type = 'checkbox';
-				checkbox.id = 'sourceURL';
-				checkbox.name = dataset[i];
-				checkbox.value = dataset[i];
-				if (i == checked1 || i == checked2) {
-					checkbox.checked = true;
-				}
-	
-					var label = document.createElement('label');
-					label.htmlFor = dataset[i];
-					label.appendChild(document.createTextNode(dataset[i]));
-	
-					var br = document.createElement('br');
-	
-					//var container = document.getElementById('urlSources');
-					container.appendChild(checkbox);
-					container.appendChild(label);
-				container.appendChild(br);
-			}
-		}
+
+		var label = document.createElement('label');
+		label.htmlFor = dataset[i];
+		label.appendChild(document.createTextNode(dataset[i]));
+
+		var br = document.createElement('br');
+
+		div.appendChild(checkbox);
+		div.appendChild(label);
+		div.appendChild(br);
+		
+		container.appendChild(div);
 	}
 }
 
@@ -296,13 +272,16 @@ function checkedOnly(fixedData) {
 	return obj;
 }
 
-function generateListeners(data, fixedData) {
+function generateListeners(fixedData) {
 	//searchbar functionality
 	//TODO
-	// var match = document.querySelector('input#urlSearch');
-	// match.addEventListener("search", e => {
-	// 	searchCheckboxes(data);
-	// });
+	var match = document.querySelector('input#urlSearch');
+	match.addEventListener("keyup", e => {
+		searchCheckboxes(fixedData);
+	});
+	match.addEventListener("search", e => {
+		searchCheckboxes(fixedData);
+	});
 	//checkbox functionality
 	var matches = document.querySelectorAll('input#sourceURL');
 	for (var i = 0; i < matches.length; i++) {
@@ -312,13 +291,22 @@ function generateListeners(data, fixedData) {
 	}
 }
 
-// function searchCheckboxes(data) {
-// 	var searchVal = document.querySelector('input#urlSearch').value;
-// 	if (searchVal == "")
-// 		generateCheckboxes(data, null);
-// 	generateCheckboxes(data, searchVal);
+function searchCheckboxes(data) {
+	var searchVal = document.querySelector('input#urlSearch').value;
+	var filter = searchVal.toUpperCase();
+	var elements = document.querySelectorAll('div#sourceURLdiv');
+	console.log(elements);
+	for (var i = 0; i < elements.length; i++) {
+		var temp = elements[i].innerText.toUpperCase();
+		if (temp.indexOf(filter) > -1) {
+			console.log(elements[i]);
+			elements[i].style.display = "";
+		} else {
+			elements[i].style.display = "none";
+		}
 
-// }
+	}
+}
 
 function updateVis(fixedData) {
 	// this is called by the listeners
