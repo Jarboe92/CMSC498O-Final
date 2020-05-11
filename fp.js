@@ -19,59 +19,82 @@ function renderVisualization() {
     		target : d.target
     	};
     }).then(function(data) {
-    	generateCheckboxes(data);
-    	generateVisualization(data);
-    	generateListeners();
+    	var fixedData = fixData(data);
+    	generateCheckboxes(data, null);
+    	generateVisualization(fixedData);
+    	generateListeners(data, fixedData);
     });
 }
 
-function generateCheckboxes(data) {
+function generateCheckboxes(data, searchVal) {
 	//Here we want to iterate through the source URLs and generate checkboxes for visualization
+	var container = document.getElementById('urlSources');
 	var dataset = [];
-
 	for (var i = 0; i < data.length; i++) {
 		if (!dataset.includes(data[i].source)) {
 			dataset.push(data[i].source);
 		}
 	}
-	// have a randomly determined source node be defaulted checked, so the visualization loads with something
-	// afterwards the visualization will update when the user selects different websites
 
-	//var randomChecked1 = Math.floor(Math.random() * (dataset.length));
-	//var randomChecked2 = Math.floor(Math.random() * (dataset.length));
+	var checked1 = 199;
+	var checked2 = 2317;
+	if (searchVal == null) {
+		for (var i = 0; i < dataset.length; i++) {
+			var checkbox = document.createElement('input');
+			checkbox.type = 'checkbox';
+			checkbox.id = 'sourceURL';
+			checkbox.name = dataset[i];
+			checkbox.value = dataset[i];
+			if (i == checked1 || i == checked2) {
+				checkbox.checked = true;
+			}
 
-	var randomChecked1 = 0;
-	var randomChecked2 = 3;
+			var label = document.createElement('label');
+			label.htmlFor = dataset[i];
+			label.appendChild(document.createTextNode(dataset[i]));
 
-	for (var i = 0; i < dataset.length; i++) {
-		var checkbox = document.createElement('input');
-		checkbox.type = 'checkbox';
-		checkbox.id = 'sourceURL';
-		checkbox.name = dataset[i];
-		checkbox.value = dataset[i];
+			var br = document.createElement('br');
 
-		if (i == randomChecked1 || i == randomChecked2) {
-			checkbox.checked = true;
+			var container = document.getElementById('urlSources');
+			container.appendChild(checkbox);
+			container.appendChild(label);
+			container.appendChild(br);
 		}
-
-		var label = document.createElement('label');
-		label.htmlFor = dataset[i];
-		label.appendChild(document.createTextNode(dataset[i]));
-
-		var br = document.createElement('br');
-
-		var container = document.getElementById('urlSources');
-		container.appendChild(checkbox);
-		container.appendChild(label);
-		container.appendChild(br);
+	} else {
+		var sv = searchVal.toUpperCase();
+		for (var i = 0; i < dataset.length; i++) {
+			if (dataset[i].toUpperCase().includes(sv)) {
+				var checkbox = document.createElement('input');
+				checkbox.type = 'checkbox';
+				checkbox.id = 'sourceURL';
+				checkbox.name = dataset[i];
+				checkbox.value = dataset[i];
+				if (i == checked1 || i == checked2) {
+					checkbox.checked = true;
+				}
+	
+					var label = document.createElement('label');
+					label.htmlFor = dataset[i];
+					label.appendChild(document.createTextNode(dataset[i]));
+	
+					var br = document.createElement('br');
+	
+					//var container = document.getElementById('urlSources');
+					container.appendChild(checkbox);
+					container.appendChild(label);
+				container.appendChild(br);
+			}
+		}
 	}
 }
 
 function generateVisualization(data) {
 	// first we have to "fix" our dataset. Currently we have it as a source and target, but
 	// in order to do the force-directed layout, we need to seperate our dataset into nodes and edges.
-	var dataset = checkedOnly(fixData(data));
-	//var dataset = fixData(data);
+	var dataset = checkedOnly(data);
+
+
+	// TODO: have the source nodes be of blue color, destination nodes of red colors?
 
 	var force = d3.forceSimulation(dataset.nodes)
 				.force("charge", d3.forceManyBody())
@@ -82,6 +105,8 @@ function generateVisualization(data) {
 
 	var svg = d3.select("#dataviz");
 
+	// TODO maybe: add a function to .style("stroke") so that the color of the edge
+	// varies depending on the source node?
 	var edges = svg.selectAll("line")
 				.data(dataset.edges)
 				.enter()
@@ -93,7 +118,11 @@ function generateVisualization(data) {
 				.data(dataset.nodes)
 				.enter()
 				.append("circle")
-				.attr("r", 10)
+				.attr("r", function(d) {
+					if (d.source)
+						return 10;
+					return 5;
+				})
 				.style("fill", function(d, i) {
 					return colors(i);
 				})
@@ -202,22 +231,26 @@ function checkedOnly(fixedData) {
 		// first we add the checked websites to the checkedNodes array.
 		for (var k = 0; k < fixedData.nodes.length; k++) {
 			if (fixedData.nodes[k].id == curURL) {
-				checkedNodes.push(fixedData.nodes[k]);
+				var temp = fixedData.nodes[k];
+				temp.source = true;
+				checkedNodes.push(temp);
 			}
 		}
 		// here we add the target nodes to the checkedNode array
 		for (var k = 0; k < fixedData.edges.length; k++) {
 			if (checkedNodes.includes(fixedData.nodes[fixedData.edges[k].source])) {
 				var destCheck = fixedData.nodes[fixedData.edges[k].target];
-				if (!checkedNodes.includes(destCheck))
-					checkedNodes.push(destCheck);
+				if (!checkedNodes.includes(destCheck)) {
+					var temp = destCheck;
+					temp.source = false;
+					checkedNodes.push(temp);
+				}
 			}
 		}
 
 		// for the current checked website, after adding the source and destination nodes, we can add the edges based
 		// on the checkedNodes indices
 		for (var k = 0; k < fixedData.edges.length; k++) {
-			console.log("current k is: " + k);
 			var source = fixedData.nodes[fixedData.edges[k].source];
 			var target = fixedData.nodes[fixedData.edges[k].target];
 
@@ -232,8 +265,6 @@ function checkedOnly(fixedData) {
 					destVal = j;
 			}
 			if (sourceVal >= 0 && destVal >= 0) {
-				console.log("source val is: " + sourceVal);
-				console.log("dest val is: " + destVal);
 				var obj = {};
 				obj["source"] = sourceVal;
 				obj["target"] = destVal;
@@ -248,7 +279,34 @@ function checkedOnly(fixedData) {
 	return obj;
 }
 
-function generateListeners() {
-	// here we generate the listeners for the searchbar functionality, and updating the
-	// visualization with the new URL's checked
+function generateListeners(data, fixedData) {
+	//searchbar functionality
+	//TODO
+	// var match = document.querySelector('input#urlSearch');
+	// match.addEventListener("search", e => {
+	// 	searchCheckboxes(data);
+	// });
+
+	
+	//checkbox functionality
+	var matches = document.querySelectorAll('input#sourceURL');
+	for (var i = 0; i < matches.length; i++) {
+		matches[i].addEventListener("click", e => {
+			updateVis(fixedData);
+		})
+	}
+}
+
+// function searchCheckboxes(data) {
+// 	var searchVal = document.querySelector('input#urlSearch').value;
+// 	if (searchVal == "")
+// 		generateCheckboxes(data, null);
+// 	generateCheckboxes(data, searchVal);
+
+// }
+
+function updateVis(fixedData) {
+	// this is called by the listeners
+  	d3.select("#dataviz").selectAll("*").remove();
+  	generateVisualization(fixedData);
 }

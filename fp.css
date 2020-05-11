@@ -40,4 +40,5 @@
   vertical-align: middle;
 }
 
-.container { border:2px solid #ccc; width:300px; height: 100px; overflow-y: scroll; }
+.container {
+  font-size: 15px; border:2px solid #ccc; width:350px; height: 650px; overflow-y: scroll; overflow-x: scroll; }
