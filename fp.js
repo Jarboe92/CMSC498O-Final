@@ -135,6 +135,12 @@ function generateVisualization(data) {
 			.attr("cy", function(d) { return d.y; });
 	});
 
+
+	var nodeCount = document.querySelector('div#nodeCount');
+	nodeCount.innerText = "current node count: " + dataset.nodes.length;
+
+
+
 	function dragStarted(d) {
 		if (!d3.event.active) force.alphaTarget(0.3).restart();
 		d.fx = d.x;
@@ -274,7 +280,6 @@ function checkedOnly(fixedData) {
 
 function generateListeners(fixedData) {
 	//searchbar functionality
-	//TODO
 	var match = document.querySelector('input#urlSearch');
 	match.addEventListener("keyup", e => {
 		searchCheckboxes(fixedData);
@@ -288,6 +293,20 @@ function generateListeners(fixedData) {
 		matches[i].addEventListener("click", e => {
 			updateVis(fixedData);
 		})
+	}
+
+	//reset functionality
+	var resButton = document.querySelector('button');
+	resButton.addEventListener("click", e=> {
+		resetVisualization(fixedData);
+	});
+}
+
+function resetVisualization(fixedData) {
+	var matches = document.querySelectorAll('input#sourceURL');
+	for (var i = 0; i < matches.length; i++) {
+		matches[i].checked = false;
+		updateVis(fixedData);
 	}
 }
 
