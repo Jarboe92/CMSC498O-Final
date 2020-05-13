@@ -7,7 +7,7 @@ csv_writer = csv.writer(fout, delimiter=',', quotechar='"', quoting=csv.QUOTE_MI
 lines = data.splitlines()
 
 # Write column names
-csv_writer.writerow(['source', 'dest'])
+csv_writer.writerow(['source', 'target'])
 
 for line in lines:
     pieces = line.split()
