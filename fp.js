@@ -306,8 +306,8 @@ function resetVisualization(fixedData) {
 	var matches = document.querySelectorAll('input#sourceURL');
 	for (var i = 0; i < matches.length; i++) {
 		matches[i].checked = false;
-		updateVis(fixedData);
 	}
+	updateVis(fixedData);
 }
 
 function searchCheckboxes(data) {
